@@ -32,10 +32,10 @@ public class BlogEntry {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd G 'at' hh:mm:ss z");
 		@Embedded
 		private ArrayList<Comment> comment= new ArrayList<Comment>();
-		private String userId ;
+		private ObjectId userId ;
 		
 		 public BlogEntry(Optional<ObjectId> id, String content, String title, String tags, 
-				 Optional<String> userId,Optional<ArrayList<Comment>> comment) {
+				 Optional<ObjectId> userId,Optional<ArrayList<Comment>> comment) {
 			
 			if (id.isPresent()) this.id = id.get();
 			this.content = content;
@@ -52,7 +52,7 @@ public class BlogEntry {
 				if (js.containsKey("content")) this.content = js.getString("content");
 				if (js.containsKey("tags")) this.tags.addAll(js.getJsonArray("tags").getList());
 				if (js.containsKey("title")) this.title = js.getString("title");
-				if (js.containsKey("user")) this.userId = js.getString("user");
+				if (js.containsKey("user")) this.userId = new ObjectId(js.getString("user"));
 				if (js.containsKey("date")) this.date = new Date(js.getString("date"));
 				if (js.containsKey("comment")){
 				JsonArray arr = js.getJsonArray("comment");
@@ -77,14 +77,14 @@ public class BlogEntry {
 				    json.put("content", this.content)
 				    .put("tags",Arrays.asList(tags))
 				    .put("title",this.title)
-				    .put("user",userId)
+				    .put("user",userId.toHexString())
 				    .put("date",this.date)
 				    .put("comment",commenttoJsonArray() )	    
 				    ;
 					return json;
 			}
 		 public String getUserId() {
-			return userId;
+			return userId.toHexString();
 		}
 		@PrePersist void prePersist() {date= new Date();}
 
@@ -92,7 +92,7 @@ public class BlogEntry {
 	        return (id != null) ? id.toHexString() : "";
 	    }
 
-		public void setUserId(String userId) {
+		public void setUserId(ObjectId userId) {
 			this.userId = userId;
 		}
 		public String getContent() {

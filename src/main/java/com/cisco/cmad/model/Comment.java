@@ -3,35 +3,44 @@ package com.cisco.cmad.model;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
+
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
-@Embedded
+@Entity("comment")
+@Indexes({
+    @Index(fields = @Field("userId"))
+})
 public class Comment {
 
+		@Id
 		private ObjectId id;
 		private String content;
 //		private BlogUsers user;
 		private Date date ;
+		private String type;
 		DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd G 'at' hh:mm:ss zs");
-		@Embedded
-		private List<Comment> comment = new ArrayList<Comment>();
-		private String userId ;
+		@Reference("blogs")
+		private ArrayList<Comment> comment= new ArrayList<Comment>();
+		private ObjectId userId ;
 		
-		 public Comment(ObjectId id, String content, String userId) {
+		 public Comment(ObjectId id, String content, ObjectId userId) {
 			super();
 			this.id = id;
 			this.content = content;
+			this.type = "comment";
 			this.userId = userId;
 		}
 		 
-		 public Comment( String content, String userId) {
+		 public Comment( String content, ObjectId userId) {
 			super();
 			this.content = content;
+			this.type = "comment";
 			this.userId = userId;
 		} 
 		 
@@ -41,21 +50,23 @@ public class Comment {
 				      json.put("_id", id.toHexString());
 				    }
 			    json.put("content", this.content)
-			    .put("user",userId)
+			    .put("user",userId.toHexString())
+			    .put("type", this.type)
 			    .put("date",dateFormat.format(this.date))	    
 			    ;
 				return json;
 		}
 			public Comment(JsonObject js){
-				if (js.containsKey("_id")) this.id = new ObjectId(js.getString("_id"));
-				if (js.containsKey("content")) this.content = js.getString("content");
-				if (js.containsKey("user")) this.userId = js.getString("user");
-			    if (js.containsKey("date")) this.date = new Date(js.getString("date"));
+				this.id = new ObjectId(js.getString("_id"));
+				this.content = js.getString("content");
+				this.userId = new ObjectId(js.getString("user"));
+				this.type = js.getString("type");
+				this.date = new Date(js.getString("date"));
 				}
 		public String getUserId() {
-			return userId;
+			return userId.toHexString();
 		}
-		public void setUserId(String userId) {
+		public void setUserId(ObjectId userId) {
 		 this.userId = userId;
 		}
 		@PrePersist void prePersist() {date= new Date();}
@@ -75,14 +86,19 @@ public class Comment {
 		public void setContent(String content) {
 			this.content = content;
 		}
-		public List<Comment> getComment() {
+		public String getType() {
+			return type;
+		}
+		public void setType(String type) {
+			this.type = type;
+		}
+		public ArrayList<Comment> getComment() {
 			return comment;
 		}
 		public void addComment(Comment comment) {
-			if (comment !=null)
-				this.comment.add(comment);
+			this.comment.add(comment);
 		}
-		public void addComment(List<Comment> comment) {
+		public void addComment(ArrayList<Comment> comment) {
 			this.comment.addAll(comment);
 		}
 		public Date getDate() {
