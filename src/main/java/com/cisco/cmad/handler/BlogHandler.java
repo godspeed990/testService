@@ -98,9 +98,11 @@ public void storeBlog(RoutingContext rc) {
      logger.debug("JSON String from POST " + jSonString);
 
   BlogEntry blog = Json.decodeValue(jSonString, BlogEntry.class);
-
+  blog.setUserId(new ObjectId());
+  blogService.storeBlog(blog);
   if (logger.isDebugEnabled())
      logger.debug("RegistrationDTO object after json Decode : " + blog);
+  rc.response().setStatusCode(201).end();
 try{	        
   eventBus.send("com.cisco.cmad.user.authenticate",new JsonObject().put("userName",userName).put("password",password),response->{
 	  if (response.succeeded()){
@@ -142,7 +144,9 @@ public void submitComment(RoutingContext rc) {
     
     String userName = Base64.getDecoder().decode(authorization.substring(authorization.lastIndexOf(" ")+1,authorization.indexOf(":"))).toString();
     String password = Base64.getDecoder().decode(authorization.substring(authorization.indexOf(":")+1)).toString();
-
+	comment.setUserId(new ObjectId());
+	blogService.updateBlogWithComments(blogId, comment);
+	rc.response().setStatusCode(201).end();
   if (logger.isDebugEnabled())
     logger.debug("Comment object : " + comment);
   	eventBus.send("com.cisco.cmad.user.authenticate",new JsonObject().put("userName",userName).put("password",password),response->{
