@@ -52,23 +52,9 @@ public void getBlogs(RoutingContext rc) {
    }
 }, res -> {           
    if (res.succeeded()) {
-   Object obj = res.result();
-   List<BlogEntry> blogs= (List<BlogEntry>) obj;
-   for (int i=0;i<blogs.size();i++){
-	   JsonObject temp = blogs.get(i).toJson();
-	   eventBus.send("com.cisco.cmad.user.info",new JsonObject().put("userId",blogs.get(i).getUserId()),response->{
-		   if (response.succeeded()){
-			   Object respObj = response.result();
-			   JsonObject JsonObj = (JsonObject) respObj;
-			   rc.response().write(Json.encode(temp.put("userName",JsonObj.getString("userName"))
-					   .put("firstName",JsonObj.getString("firstName"))
-					   .put("lastName",JsonObj.getString("lastName")))   						   
-					   );
-		   }
-	   });
-   }
+	   JsonArray val = (JsonArray) res.result();
    rc.response().setStatusCode(200);
-   rc.response().end();
+   rc.response().end(val.encode());
    }
    else {
 	   rc.response().setStatusCode(400);
@@ -88,21 +74,21 @@ public JsonArray getUserInfo(List<BlogEntry> blogs){
 	return new JsonArray();
 }
 public void storeBlog(RoutingContext rc) {
-  //String jSonString = rc.getBodyAsString(); //get JSON body as String
+  String jSonString = rc.getBodyAsString(); //get JSON body as String
   String authorization = rc.request().getHeader("Authorization");
-  JsonObject jSonString = rc.getBodyAsJson();
+  //JsonObject jSonString = rc.getBodyAsJson();
   String userName = Base64.getDecoder().decode(authorization.substring(authorization.lastIndexOf(" ")+1,authorization.indexOf(":"))).toString();
   String password = Base64.getDecoder().decode(authorization.substring(authorization.indexOf(":")+1)).toString();
 
   if (logger.isDebugEnabled())
      logger.debug("JSON String from POST " + jSonString);
 
-//  BlogEntry blog = Json.decodeValue(jSonString, BlogEntry.class);
-BlogEntry blog =new BlogEntry(Optional.empty(),rc.getBodyAsJson().getValue("content").toString(),
+  BlogEntry blog = Json.decodeValue(jSonString, BlogEntry.class);
+/*BlogEntry blog =new BlogEntry(Optional.empty(),rc.getBodyAsJson().getValue("content").toString(),
 		rc.getBodyAsJson().getValue("title").toString(),rc.getBodyAsJson().getValue("tags").toString(),
 				Optional.empty(),Optional.empty()
-		);
-  blog.setUserId(new ObjectId());
+		);*/
+  blog.setUserName(userName);
   blogService.storeBlog(blog);
   if (logger.isDebugEnabled())
      logger.debug("RegistrationDTO object after json Decode : " + blog);
@@ -113,7 +99,7 @@ try{
 		  logger.debug("user:"+userName+"authenticated");
 		  JsonObject resp = (JsonObject) response.result().body();
 		  if (resp.getString("userId")!=null){
-			  blog.setUserId(new ObjectId(resp.getString("userId")));
+			  blog.setUserName(userName);
 			  blogService.storeBlog(blog);
               if (logger.isDebugEnabled())
                   logger.debug("Blog stored successfully");
@@ -143,13 +129,13 @@ public void submitComment(RoutingContext rc) {
 
   if (logger.isDebugEnabled())
     logger.debug("JSON String from POST " + jSonString + " Blog Id :" + blogId);
-  //  Comment comment = Json.decodeValue(jSonString, Comment.class);
+    Comment comment = Json.decodeValue(jSonString, Comment.class);
     String authorization = rc.request().getHeader("Authorization");
     
     String userName = Base64.getDecoder().decode(authorization.substring(authorization.lastIndexOf(" ")+1,authorization.indexOf(":"))).toString();
     String password = Base64.getDecoder().decode(authorization.substring(authorization.indexOf(":")+1)).toString();
-	Comment comment = new Comment(rc.getBodyAsJson().getValue("content").toString(),new ObjectId());
- ///   comment.setUserId(new ObjectId());
+//	Comment comment = new Comment(rc.getBodyAsJson().getValue("content").toString(),new ObjectId());
+    comment.setUserName("Memme");
 	blogService.updateBlogWithComments(blogId, comment);
 	rc.response().setStatusCode(201).end();
   if (logger.isDebugEnabled())
@@ -159,7 +145,8 @@ public void submitComment(RoutingContext rc) {
 			  logger.debug("user:"+userName+"authenticated");
 			JsonObject resp = (JsonObject) response.result().body();
 			if (resp.getString("userId")!=null){
-				comment.setUserId(new ObjectId(resp.getString("userId")));
+				comment.setUserName(userName);
+				
 				blogService.updateBlogWithComments(blogId, comment);
 				rc.response().setStatusCode(200).end();
 				if (logger.isDebugEnabled())

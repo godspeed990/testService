@@ -3,14 +3,11 @@ package com.cisco.cmad.verticle;
 
 
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.DeploymentOptions;
+
 import io.vertx.core.Future;
-import io.vertx.core.Vertx;
-import io.vertx.core.VertxOptions;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.http.HttpServerOptions;
-import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
