@@ -20,16 +20,16 @@ public class Comment {
 		DateFormat dateFormat = new SimpleDateFormat("yyyy.MM.dd G 'at' hh:mm:ss zs");
 		@Embedded
 		private List<Comment> comment = new ArrayList<Comment>();
-		private ObjectId userId ;
+		private String userId ;
 		
-		 public Comment(ObjectId id, String content, ObjectId userId) {
+		 public Comment(ObjectId id, String content, String userId) {
 			super();
 			this.id = id;
 			this.content = content;
 			this.userId = userId;
 		}
 		 
-		 public Comment( String content, ObjectId userId) {
+		 public Comment( String content, String userId) {
 			super();
 			this.content = content;
 			this.userId = userId;
@@ -41,7 +41,7 @@ public class Comment {
 				      json.put("_id", id.toHexString());
 				    }
 			    json.put("content", this.content)
-			    .put("user",userId.toHexString())
+			    .put("user",userId)
 			    .put("date",dateFormat.format(this.date))	    
 			    ;
 				return json;
@@ -49,13 +49,13 @@ public class Comment {
 			public Comment(JsonObject js){
 				if (js.containsKey("_id")) this.id = new ObjectId(js.getString("_id"));
 				if (js.containsKey("content")) this.content = js.getString("content");
-				if (js.containsKey("user")) this.userId = new ObjectId(js.getString("user"));
+				if (js.containsKey("user")) this.userId = js.getString("user");
 			    if (js.containsKey("date")) this.date = new Date(js.getString("date"));
 				}
 		public String getUserId() {
-			return userId.toHexString();
+			return userId;
 		}
-		public void setUserId(ObjectId userId) {
+		public void setUserId(String userId) {
 		 this.userId = userId;
 		}
 		@PrePersist void prePersist() {date= new Date();}

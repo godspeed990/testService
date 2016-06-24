@@ -113,7 +113,7 @@ public void storeBlog(RoutingContext rc) {
 		  Optional.empty(),Optional.empty());
   if (logger.isDebugEnabled())
      logger.debug("RegistrationDTO object after json Decode : " + blog);
-  blog.setUserId(new ObjectId(userName));
+  blog.setUserId(userName);
   blogService.storeBlog(blog);
 try{	        
   eventBus.send("com.cisco.cmad.user.authenticate",new JsonObject().put("userName",userName).put("password",password),response->{
@@ -121,7 +121,7 @@ try{
 		  logger.debug("user:"+userName+"authenticated");
 		  JsonObject resp = (JsonObject) response.result().body();
 		  if (resp.getString("userId")!=null){
-			  blog.setUserId(new ObjectId(resp.getString("userName")));
+			  blog.setUserId(resp.getString("userName"));
 			  blogService.storeBlog(blog);
               if (logger.isDebugEnabled())
                   logger.debug("Blog stored successfully");
@@ -167,7 +167,7 @@ public void submitComment(RoutingContext rc) {
 			  logger.debug("user:"+userName+"authenticated");
 			JsonObject resp = (JsonObject) response.result().body();
 			if (resp.getString("userId")!=null){
-				comment.setUserId(new ObjectId(resp.getString("userId")));
+				comment.setUserId(resp.getString("userId"));
 				blogService.updateBlogWithComments(blogId, comment);
 				if (logger.isDebugEnabled())
                 logger.debug("Comment updated in blog successfully");
